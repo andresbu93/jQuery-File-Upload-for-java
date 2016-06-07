@@ -3,6 +3,8 @@ package info.sudr.file;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
 import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -106,12 +108,13 @@ public class UploadServlet extends HttpServlet {
         ServletFileUpload uploadHandler = new ServletFileUpload(new DiskFileItemFactory());
         PrintWriter writer = response.getWriter();
         response.setContentType("application/json");
-        JSONArray json = new JSONArray();
+        Collection<JSONObject> files = new ArrayList<JSONObject>();
+        JSONObject json = new JSONObject();
         try {
             List<FileItem> items = uploadHandler.parseRequest(request);
             for (FileItem item : items) {
                 if (!item.isFormField()) {
-                        File file = new File(request.getServletContext().getRealPath("/")+"imgs/", item.getName());
+                        File file = new File(getServletContext().getRealPath("/")+"imgs/", item.getName());
                         item.write(file);
                         JSONObject jsono = new JSONObject();
                         jsono.put("name", item.getName());
@@ -120,10 +123,11 @@ public class UploadServlet extends HttpServlet {
                         jsono.put("thumbnail_url", "UploadServlet?getthumb=" + item.getName());
                         jsono.put("delete_url", "UploadServlet?delfile=" + item.getName());
                         jsono.put("delete_type", "GET");
-                        json.put(jsono);
-                        System.out.println(json.toString());
+                        files.add(jsono);
+                        System.out.println(files.toString());
                 }
             }
+            json.put("files", new JSONArray(files));
         } catch (FileUploadException e) {
                 throw new RuntimeException(e);
         } catch (Exception e) {
